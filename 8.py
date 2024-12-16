@@ -7,10 +7,22 @@ def format_table(benches, algs, results):
     if len(benches) == 0 or len(algs) == 0:
         print("not enough data")
         return
-    header = f"| {'Benchmark':<10} | " + " | ".join(f"{alg:<10}" for alg in algs) + " |"
+    bench_width = max(len(str(b)) for b in benches + ["Benchmark"])
+    alg_widths = [
+        max(len(str(a)), *(len(str(r)) for r in rs))
+        for a, rs in zip(algs, zip(*results))
+    ]
+
+    header = (
+        f"| {'Benchmark':<{bench_width}} | "
+        + " | ".join(f"{alg:<{width}}" for alg, width in zip(algs, alg_widths))
+        + " |"
+    )
     separator = "|" + "-" * (len(header) - 2) + "|"
     rows = "\n".join(
-        f"| {bench:<10} | " + " | ".join(f"{result:<10}" for result in row) + "  |"
+        f"| {bench:<{bench_width}} | "
+        + " | ".join(f"{result:<{width}}" for result, width in zip(row, alg_widths))
+        + " |"
         for bench, row in zip(benches, results)
     )
     print(f"{header}\n{separator}\n{rows}")
@@ -46,9 +58,9 @@ class TestFormatTable(unittest.TestCase):
     def test_format_table_single(self):
         format_table(["average"], ["sample sort"], [[0.5]])
         expected = (
-            "| Benchmark  | sample sort |\n"
-            "|--------------------------|\n"
-            "| average    | 0.5         |\n"
+            "| Benchmark | sample sort |\n"
+            "|-------------------------|\n"
+            "| average   | 0.5         |\n"
         )
         self.assertEqual(self.fix_stdout.getvalue(), expected)
 
