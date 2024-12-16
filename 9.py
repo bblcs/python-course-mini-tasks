@@ -1,24 +1,52 @@
-class LRUCache:
+import unittest
+from collections import OrderedDict
+
+
+class LRUCache(OrderedDict):
     def __init__(self, capacity=16):
         self.capacity = capacity
-        self.cache = {}
-        self._order = []
 
     def get(self, key):
-        if key in self.cache:
-            self._order.remove(key)
-            self._order.append(key)
-            return self.cache[key]
-        return None
+        if key not in self:
+            return None
+        self.move_to_end(key)
+        return self[key]
 
     def put(self, key, value):
-        if key in self.cache:
-            self.cache[key] = value
-            self._order.remove(key)
-            self._order.append(key)
-        else:
-            if len(self.cache) >= self.capacity:
-                oldest_key = self._order.pop(0)
-                del self.cache[oldest_key]
-            self.cache[key] = value
-            self._order.append(key)
+        if key in self:
+            self.move_to_end(key)
+        self[key] = value
+        if len(self) > self.capacity:
+            self.popitem(last=False)
+
+
+class TestLRUCache(unittest.TestCase):
+    def setUp(self):
+        self.cache = LRUCache()
+
+    def test_put_get_item(self):
+        self.cache.put("key1", "value1")
+        self.assertEqual(self.cache.get("key1"), "value1")
+
+    def test_put_update_value(self):
+        self.cache.put("key1", "value1")
+        self.cache.put("key1", "value2")
+        self.assertEqual(self.cache.get("key1"), "value2")
+
+    def test_get_nonexistent_value(self):
+        self.assertEqual(self.cache.get("nonexistent"), None)
+
+    def test_cache_exceeds_capacity(self):
+        for i in range(17):
+            self.cache.put(f"key{i}", f"value{i}")
+        self.assertIsNone(self.cache.get("key0"))
+
+    def test_cache_order_updates_correctly(self):
+        for i in range(5):
+            self.cache.put(f"key{i}", f"value{i}")
+        self.cache.get("key0")
+        self.assertEqual(next(iter(self.cache)), "key1")
+
+
+if __name__ == "__main__":
+    unittest.main()
