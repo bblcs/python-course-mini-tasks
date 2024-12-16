@@ -3,19 +3,26 @@ from unittest.mock import patch
 import functools
 
 
-def deprecated(since=None, will_be_removed=None):
+def deprecated(*args, **kwargs):
+    if len(args) == 1 and callable(args[0]):
+        return deprecated()(args[0])
+
+    since = kwargs.get("since", None)
+    will_be_removed = kwargs.get("will_be_removed", None)
+
     def decorator(f):
         @functools.wraps(f)
         def wrap(*args, **kwargs):
-            if since is not None and will_be_removed is not None:
-                fs = f"Warning: function {f.__name__} is deprecated since version {since}. It will be removed in version {will_be_removed}."
-            elif since is None and will_be_removed is not None:
-                fs = f"Warning: function {f.__name__} is deprecated. It will be removed in version {will_be_removed}."
-            elif since is not None and will_be_removed is None:
-                fs = f"Warning: function {f.__name__} is deprecated since version {since}. It will be removed in future versions."
+            message_template = "Warning: function {name} is deprecated"
+            if since:
+                message_template += f" since version {since}"
+            if will_be_removed:
+                message_template += f". It will be removed in version {will_be_removed}"
             else:
-                fs = f"Warning: function {f.__name__} is deprecated. It will be removed in future versions."
-            print(fs)
+                message_template += ". It will be removed in future versions"
+            message_template += "."
+
+            print(message_template.format(name=f.__name__))
             return f(*args, **kwargs)
 
         return wrap
@@ -36,7 +43,7 @@ class TestDeprecatedDecorator(unittest.TestCase):
     def func_with_will_be_removed_only(self):
         return "Function Executed"
 
-    @deprecated()
+    @deprecated
     def func_without_versions(self):
         return "Function Executed"
 
