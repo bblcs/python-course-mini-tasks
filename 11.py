@@ -1,4 +1,4 @@
-cycle = lambda iterable: (item for _ in iter(int, 1) for item in iterable)
+cycle = lambda iterable: (item for _ in iter(int, 1) for item in (lambda: (yield from iterable) if hasattr(iterable, "__iter__") else iterable)())
 chain = lambda *iterables: (item for iterable in iterables for item in iterable)
 take = lambda iterable, n: [x for _, x in zip(range(n), iterable)]
 
