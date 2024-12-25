@@ -1,6 +1,17 @@
-cycle = lambda iterable: (item for _ in iter(int, 1) for item in (lambda: (yield from iterable) if hasattr(iterable, "__iter__") else iterable)())
-chain = lambda *iterables: (item for iterable in iterables for item in iterable)
-take = lambda iterable, n: [x for _, x in zip(range(n), iterable)]
+def cycle(iterable):
+    not_memory_efficient = list(iterable)
+    if not not_memory_efficient:
+        return
+    while True:
+        yield from not_memory_efficient
+
+
+def chain(*iterables):
+    return (item for iterable in iterables for item in iterable)
+
+
+def take(iterable, n):
+    return [x for _, x in zip(range(n), iterable)]
 
 
 def test_chain():
@@ -18,3 +29,18 @@ def test_chain():
 
 def test_cycle():
     assert take(cycle([1, 2, 3]), 10) == [1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
+
+
+def test_infty():
+    assert take(cycle(chain([1])), 10) == [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+    ]
