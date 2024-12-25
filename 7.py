@@ -3,13 +3,7 @@ from unittest.mock import patch
 import functools
 
 
-def deprecated(*args, **kwargs):
-    if len(args) == 1 and callable(args[0]):
-        return deprecated()(args[0])
-
-    since = kwargs.get("since", None)
-    will_be_removed = kwargs.get("will_be_removed", None)
-
+def deprecated(f=None, since=None, will_be_removed=None):
     def decorator(f):
         @functools.wraps(f)
         def wrap(*args, **kwargs):
@@ -27,6 +21,8 @@ def deprecated(*args, **kwargs):
 
         return wrap
 
+    if f is not None:
+        return decorator(f)
     return decorator
 
 
